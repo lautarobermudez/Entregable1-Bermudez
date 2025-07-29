@@ -3,7 +3,7 @@
 // Variables globales y estructura básica
 // ========================================
 
-// CONSTANTES (igual que tu simulador original)
+// CONSTANTES
 const IVA = 0.21;
 const DESCUENTO_MAYORISTA = 0.15;
 const CANTIDAD_DESCUENTO = 5;
@@ -54,7 +54,7 @@ function cargarDatos() {
 // FUNCIONES DE INVENTARIO
 // ========================================
 
-// Función para agregar producto (reemplaza tu cargarInventario)
+// Función para agregar producto
 function agregarProducto(evento) {
     evento.preventDefault();
     
@@ -80,7 +80,7 @@ function agregarProducto(evento) {
         return;
     }
     
-    // Crear objeto producto (igual estructura que tu simulador)
+    // Crear objeto producto
     const producto = {
         id: inventario.length + 1,
         nombre: nombre,
@@ -244,11 +244,11 @@ function mostrarCarrito() {
     resumenVenta.style.display = 'block';
 }
 
-// Función para mostrar resumen de venta (igual lógica que tu simulador)
+// Función para mostrar resumen de venta
 function mostrarResumenVenta() {
     const detalleResumen = document.getElementById('detalle-resumen');
     
-    // Calcular totales (igual que tu simulador original)
+    // Calcular totales 
     let subtotal = 0;
     let cantidadTotal = 0;
     
@@ -299,7 +299,7 @@ function limpiarCarrito() {
     mostrarMensaje('🗑️ Carrito limpiado', 'info');
 }
 
-// Función para finalizar venta (igual lógica que tu simulador)
+// Función para finalizar venta 
 function finalizarVenta() {
     if (carrito.length === 0) {
         mostrarMensaje('❌ El carrito está vacío', 'error');
@@ -324,7 +324,7 @@ function finalizarVenta() {
     let impuestos = subtotalConDescuento * IVA;
     let total = subtotalConDescuento + impuestos;
     
-    // Crear objeto venta (igual que tu simulador)
+    // Crear objeto venta 
     let venta = {
         id: ++contadorVentas,
         fecha: new Date().toLocaleDateString(),
@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========================================
-// FUNCIONES DE REPORTES (igual lógica que tu simulador original)
+// FUNCIONES DE REPORTES 
 // ========================================
 
 // Función para generar reportes completos
@@ -422,7 +422,7 @@ function mostrarReportes() {
         return;
     }
     
-    // Calcular estadísticas (igual que tu simulador original)
+    // Calcular estadísticas 
     let totalProductosVendidos = 0;
     let productoMasVendido = null;
     let maxVendidos = 0;
