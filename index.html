@@ -3,60 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <title>Simulador de Tienda Virtual - Segunda Entrega</title>
     <link rel="stylesheet" href="style/style.css">
-
-    <!-- Archivo JavaScript del simulador -->
-    <script defer src="script/script.js"></script>
-
-    <title>Simulador de Tienda - Primera Entrega</title>
 </head>
 <body>
     <div class="container">
-        <h1>🏪 Simulador de Tienda Virtual</h1>
-        
-        <div class="description">
-            <h2>📝 Descripción del Proyecto</h2>
-            <p>
-                Este simulador de tienda virtual es una aplicación interactiva desarrollada en JavaScript 
-                que permite gestionar un inventario de productos y procesar ventas de manera dinámica. 
-                El sistema está diseñado para demostrar el uso de estructuras fundamentales de programación 
-                como variables, funciones, arrays, objetos y estructuras de control.
-            </p>
-            <p>
-                La aplicación simula el funcionamiento de una tienda real donde el usuario puede cargar 
-                productos al inventario, realizar ventas con cálculos automáticos de precios (incluyendo IVA 
-                y descuentos), gestionar el stock y generar reportes de ventas. Todo el sistema funciona 
-                a través de la consola del navegador y cuadros de diálogo interactivos.
-            </p>
-        </div>
+        <header>
+            <h1>🏪 Simulador de Tienda Virtual</h1>
+            <p>Gestiona tu inventario y realiza ventas</p>
+        </header>
 
-        <div class="features">
-            <h2>🎯 Funcionalidades Implementadas</h2>
-            <ul>
-                <li>Gestión dinámica de inventario con arrays y objetos</li>
-                <li>Sistema de ventas con cálculo automático de totales</li>
-                <li>Aplicación de IVA y descuentos por cantidad</li>
-                <li>Control de stock en tiempo real</li>
-                <li>Generación de reportes de ventas y productos más vendidos</li>
-                <li>Interfaz interactiva usando Prompt, Confirm y Alert</li>
-                <li>Validación de datos de entrada</li>
-                <li>Menú cíclico para múltiples operaciones</li>
-            </ul>
-        </div>
+        <!-- SECCIÓN: AGREGAR PRODUCTOS AL INVENTARIO -->
+        <section id="seccion-inventario">
+            <h2>📦 Gestión de Inventario</h2>
+            
+            <div class="form-container">
+                <h3>Agregar Nuevo Producto</h3>
+                <form id="form-producto">
+                    <div class="form-group">
+                        <label for="nombre-producto">Nombre del producto:</label>
+                        <input type="text" id="nombre-producto" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="precio-producto">Precio:</label>
+                        <input type="number" id="precio-producto" step="0.01" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="stock-producto">Stock:</label>
+                        <input type="number" id="stock-producto" min="0" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categoria-producto">Categoría:</label>
+                        <input type="text" id="categoria-producto" placeholder="Ej: Electrónicos">
+                    </div>
+                    
+                    <button type="submit">➕ Agregar Producto</button>
+                </form>
+            </div>
 
-        <div class="instructions">
-            <h2>🚀 Instrucciones de Uso</h2>
-            <p><strong>1.</strong> Abre las herramientas de desarrollador (F12)</p>
-            <p><strong>2.</strong> Ve a la pestaña "Console"</p>
-            <p><strong>3.</strong> El simulador se iniciará automáticamente</p>
-            <p><strong>4.</strong> Sigue las instrucciones en los cuadros de diálogo</p>
-            <p><strong>5.</strong> Observa los resultados en la consola</p>
-        </div>
+            <!-- Lista de productos en inventario -->
+            <div class="inventario-lista">
+                <h3>📋 Inventario Actual</h3>
+                <div id="lista-inventario">
+                    <!-- Aquí se mostrarán los productos dinámicamente -->
+                    <p><em>No hay productos en el inventario</em></p>
+                </div>
+            </div>
+        </section>
 
-        <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #3498db; color: white; border-radius: 5px;">
-            <h3>📊 Presiona F12 y ve a Console para usar el simulador</h3>
-        </div>
+        <!-- SECCIÓN: ÁREA DE VENTAS -->
+        <section id="seccion-ventas">
+            <h2>🛒 Realizar Venta</h2>
+            
+            <div class="ventas-container">
+                <!-- Catálogo de productos disponibles -->
+                <div class="catalogo">
+                    <h3>🏪 Catálogo de Productos</h3>
+                    <div id="lista-catalogo">
+                        <!-- Aquí se mostrarán los productos disponibles para venta -->
+                        <p><em>No hay productos disponibles para venta</em></p>
+                    </div>
+                </div>
+
+                <!-- Carrito de compras -->
+                <div class="carrito">
+                    <h3>🛒 Carrito de Compras</h3>
+                    <div id="lista-carrito">
+                        <!-- Aquí se mostrarán los productos del carrito -->
+                        <p><em>El carrito está vacío</em></p>
+                    </div>
+                    
+                    <!-- Resumen de venta -->
+                    <div id="resumen-venta" style="display: none;">
+                        <h4>💰 Resumen de la Venta</h4>
+                        <div id="detalle-resumen">
+                            <!-- Aquí se mostrará el resumen con totales -->
+                        </div>
+                        <button id="btn-finalizar-venta">✅ Finalizar Venta</button>
+                        <button id="btn-limpiar-carrito">🗑️ Limpiar Carrito</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: REPORTES -->
+        <section id="seccion-reportes">
+            <h2>📊 Reportes y Estadísticas</h2>
+            
+            <div class="reportes-container">
+                <button id="btn-mostrar-reportes">📈 Generar Reporte</button>
+                
+                <div id="area-reportes">
+                    <!-- Aquí se mostrarán los reportes generados -->
+                    <p><em>Haz clic en "Generar Reporte" para ver las estadísticas</em></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: NAVEGACIÓN/CONTROLES GENERALES -->
+        <section id="controles-generales">
+            <h2>⚙️ Controles Generales</h2>
+            <div class="botones-control">
+                <button id="btn-limpiar-inventario">🗑️ Limpiar Inventario</button>
+                <button id="btn-limpiar-ventas">📊 Limpiar Historial de Ventas</button>
+                <button id="btn-exportar-datos">💾 Exportar Datos</button>
+            </div>
+        </section>
     </div>
+
+    <!-- Área para mensajes/notificaciones -->
+    <div id="area-mensajes">
+        <!-- Aquí aparecerán mensajes de éxito, error, etc. -->
+    </div>
+
+    <script defer src="script/script.js"></script>
 </body>
 </html>

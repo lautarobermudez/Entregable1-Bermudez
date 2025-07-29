@@ -1,183 +1,261 @@
 // ========================================
-// SIMULADOR DE TIENDA VIRTUAL
-// Primera Entrega - CoderHouse JavaScript
+// SIMULADOR DE TIENDA VIRTUAL - SEGUNDA ENTREGA
+// Variables globales y estructura básica
 // ========================================
 
-// CONSTANTES DEL SISTEMA
-const IVA = 0.21; // 21% de IVA
-const DESCUENTO_MAYORISTA = 0.15; // 15% descuento por compras grandes
-const CANTIDAD_DESCUENTO = 5; // Cantidad mínima para descuento mayorista
+// CONSTANTES (igual que tu simulador original)
+const IVA = 0.21;
+const DESCUENTO_MAYORISTA = 0.15;
+const CANTIDAD_DESCUENTO = 5;
 
-// VARIABLES GLOBALES Y ARRAYS
-let inventario = []; // Array para almacenar productos de la tienda
-let ventasDelDia = []; // Array para guardar el historial de ventas
-let totalRecaudado = 0; // Variable para el total de dinero recaudado
-let contadorVentas = 0; // Contador de ventas realizadas
+// ARRAYS PRINCIPALES
+let inventario = [];
+let carrito = [];
+let ventasDelDia = [];
+let totalRecaudado = 0;
+let contadorVentas = 0;
 
 // ========================================
-// FUNCIÓN 1: CARGAR INVENTARIO (ENTRADA DE DATOS)
+// FUNCIONES DE LOCALSTORAGE
 // ========================================
-function cargarInventario() {
-    console.log("📦 === CARGA DE INVENTARIO ===");
+
+// Guardar datos en localStorage
+function guardarDatos() {
+    localStorage.setItem('inventario', JSON.stringify(inventario));
+    localStorage.setItem('carrito', JSON.stringify(carrito));
+    localStorage.setItem('ventasDelDia', JSON.stringify(ventasDelDia));
+    localStorage.setItem('totalRecaudado', totalRecaudado);
+    localStorage.setItem('contadorVentas', contadorVentas);
+}
+
+// Cargar datos desde localStorage
+function cargarDatos() {
+    const inventarioGuardado = localStorage.getItem('inventario');
+    const carritoGuardado = localStorage.getItem('carrito');
+    const ventasGuardadas = localStorage.getItem('ventasDelDia');
     
-    // Ciclo para cargar productos hasta que el usuario decida parar
-    let continuarCargando = true;
-    
-    while (continuarCargando) {
-        // ENTRADA: Solicitar datos del producto
-        let nombre = prompt("🏷️ Ingrese el nombre del producto:");
-        
-        // Validar que el nombre no esté vacío
-        if (nombre === null || nombre.trim() === "") {
-            alert("❌ El nombre del producto no puede estar vacío");
-            continue;
-        }
-        
-        let precio = parseFloat(prompt("💰 Ingrese el precio del producto:"));
-        
-        // Validar que el precio sea un número válido y positivo
-        if (isNaN(precio) || precio <= 0) {
-            alert("❌ El precio debe ser un número positivo");
-            continue;
-        }
-        
-        let stock = parseInt(prompt("📊 Ingrese la cantidad en stock:"));
-        
-        // Validar que el stock sea un número válido y positivo
-        if (isNaN(stock) || stock < 0) {
-            alert("❌ El stock debe ser un número positivo o cero");
-            continue;
-        }
-        
-        let categoria = prompt("🏷️ Ingrese la categoría del producto:");
-        if (categoria === null || categoria.trim() === "") {
-            categoria = "General"; // Categoría por defecto
-        }
-        
-        // PROCESAMIENTO: Crear objeto producto y agregarlo al inventario
-        let producto = {
-            id: inventario.length + 1,
-            nombre: nombre.trim(),
-            precio: precio,
-            stock: stock,
-            categoria: categoria.trim(),
-            vendidos: 0 // Contador de productos vendidos
-        };
-        
-        inventario.push(producto);
-        
-        // SALIDA: Confirmar producto agregado
-        console.log(`✅ Producto agregado: ${producto.nombre} - $${producto.precio} - Stock: ${producto.stock}`);
-        
-        // Preguntar si desea continuar cargando productos
-        continuarCargando = confirm("¿Desea agregar otro producto al inventario?");
+    if (inventarioGuardado) {
+        inventario = JSON.parse(inventarioGuardado);
     }
     
-    // Mostrar resumen del inventario cargado
-    console.log(`\n📋 Inventario cargado: ${inventario.length} productos`);
-    alert(`✅ Inventario cargado exitosamente!\nTotal de productos: ${inventario.length}`);
+    if (carritoGuardado) {
+        carrito = JSON.parse(carritoGuardado);
+    }
+    
+    if (ventasGuardadas) {
+        ventasDelDia = JSON.parse(ventasGuardadas);
+    }
+    
+    totalRecaudado = parseFloat(localStorage.getItem('totalRecaudado')) || 0;
+    contadorVentas = parseInt(localStorage.getItem('contadorVentas')) || 0;
 }
 
 // ========================================
-// FUNCIÓN 2: PROCESAR VENTA (PROCESAMIENTO DE DATOS)
+// FUNCIONES DE INVENTARIO
 // ========================================
-function procesarVenta() {
-    console.log("\n🛒 === NUEVA VENTA ===");
+
+// Función para agregar producto (reemplaza tu cargarInventario)
+function agregarProducto(evento) {
+    evento.preventDefault();
     
-    // Validar que haya productos en inventario
-    if (inventario.length === 0) {
-        alert("❌ No hay productos en el inventario. Primero debe cargar productos.");
+    // Obtener datos del formulario
+    const nombre = document.getElementById('nombre-producto').value.trim();
+    const precio = parseFloat(document.getElementById('precio-producto').value);
+    const stock = parseInt(document.getElementById('stock-producto').value);
+    const categoria = document.getElementById('categoria-producto').value.trim() || 'General';
+    
+    // Validaciones básicas
+    if (nombre === '') {
+        mostrarMensaje('❌ El nombre del producto no puede estar vacío', 'error');
         return;
     }
     
-    // Mostrar catálogo de productos disponibles
-    console.log("🏪 CATÁLOGO DE PRODUCTOS:");
-    console.log("========================");
-    
-    let catalogoTexto = "🏪 CATÁLOGO DE PRODUCTOS:\n\n";
-    
-    // Ciclo FOR para mostrar todos los productos
-    for (let i = 0; i < inventario.length; i++) {
-        let producto = inventario[i];
-        if (producto.stock > 0) {
-            let linea = `${producto.id}. ${producto.nombre} - $${producto.precio} (Stock: ${producto.stock})`;
-            console.log(linea);
-            catalogoTexto += linea + "\n";
-        }
+    if (isNaN(precio) || precio <= 0) {
+        mostrarMensaje('❌ El precio debe ser un número mayor a 0', 'error');
+        return;
     }
     
-    alert(catalogoTexto);
+    if (isNaN(stock) || stock < 0) {
+        mostrarMensaje('❌ El stock debe ser un número mayor o igual a 0', 'error');
+        return;
+    }
     
-    let carrito = []; // Array para los productos de esta venta
-    let continuarComprando = true;
+    // Crear objeto producto (igual estructura que tu simulador)
+    const producto = {
+        id: inventario.length + 1,
+        nombre: nombre,
+        precio: precio,
+        stock: stock,
+        categoria: categoria,
+        vendidos: 0
+    };
     
-    // Ciclo para agregar productos al carrito
-    while (continuarComprando) {
-        // ENTRADA: Solicitar producto y cantidad
-        let idProducto = parseInt(prompt("🔢 Ingrese el ID del producto que desea comprar:"));
-        
-        // Validar ID del producto
-        if (isNaN(idProducto) || idProducto < 1 || idProducto > inventario.length) {
-            alert("❌ ID de producto inválido");
-            continue;
+    // Agregar al inventario
+    inventario.push(producto);
+    
+    // Guardar en localStorage
+    guardarDatos();
+    
+    // Limpiar formulario
+    document.getElementById('form-producto').reset();
+    
+    // Actualizar pantalla
+    mostrarInventario();
+    mostrarCatalogo();
+    
+    // Mensaje de éxito
+    mostrarMensaje(`✅ Producto "${producto.nombre}" agregado correctamente`, 'exito');
+}
+
+// Función para mostrar inventario en HTML
+function mostrarInventario() {
+    const listaInventario = document.getElementById('lista-inventario');
+    
+    if (inventario.length === 0) {
+        listaInventario.innerHTML = '<p><em>No hay productos en el inventario</em></p>';
+        return;
+    }
+    
+    let html = '';
+    
+    inventario.forEach(producto => {
+        html += `
+            <div class="producto-item">
+                <h4>${producto.nombre}</h4>
+                <p><strong>ID:</strong> ${producto.id}</p>
+                <p><strong>Precio:</strong> $${producto.precio.toFixed(2)}</p>
+                <p><strong>Stock:</strong> ${producto.stock}</p>
+                <p><strong>Categoría:</strong> ${producto.categoria}</p>
+                <p><strong>Vendidos:</strong> ${producto.vendidos}</p>
+            </div>
+        `;
+    });
+    
+    listaInventario.innerHTML = html;
+}
+
+// Función para mostrar catálogo (productos disponibles para venta)
+function mostrarCatalogo() {
+    const listaCatalogo = document.getElementById('lista-catalogo');
+    
+    const productosDisponibles = inventario.filter(producto => producto.stock > 0);
+    
+    if (productosDisponibles.length === 0) {
+        listaCatalogo.innerHTML = '<p><em>No hay productos disponibles para venta</em></p>';
+        return;
+    }
+    
+    let html = '';
+    
+    productosDisponibles.forEach(producto => {
+        html += `
+            <div class="producto-catalogo">
+                <h4>${producto.nombre}</h4>
+                <p><strong>Precio:</strong> $${producto.precio.toFixed(2)}</p>
+                <p><strong>Stock:</strong> ${producto.stock}</p>
+                <div class="cantidad-container">
+                    <label for="cantidad-${producto.id}">Cantidad:</label>
+                    <input type="number" id="cantidad-${producto.id}" min="1" max="${producto.stock}" value="1">
+                </div>
+                <button onclick="agregarAlCarrito(${producto.id})">🛒 Agregar al Carrito</button>
+            </div>
+        `;
+    });
+    
+    listaCatalogo.innerHTML = html;
+}
+
+// ========================================
+// FUNCIONES DE CARRITO Y VENTAS
+// ========================================
+
+// Función para agregar producto al carrito
+function agregarAlCarrito(idProducto) {
+    const producto = inventario.find(p => p.id === idProducto);
+    const cantidadInput = document.getElementById(`cantidad-${idProducto}`);
+    const cantidad = parseInt(cantidadInput.value);
+    
+    if (!producto || cantidad <= 0 || cantidad > producto.stock) {
+        mostrarMensaje('❌ Cantidad inválida', 'error');
+        return;
+    }
+    
+    // Verificar si el producto ya está en el carrito
+    const itemExistente = carrito.find(item => item.producto.id === idProducto);
+    
+    if (itemExistente) {
+        // Si ya existe, aumentar cantidad
+        if (itemExistente.cantidad + cantidad <= producto.stock) {
+            itemExistente.cantidad += cantidad;
+            itemExistente.subtotal = itemExistente.cantidad * producto.precio;
+        } else {
+            mostrarMensaje('❌ No hay suficiente stock', 'error');
+            return;
         }
-        
-        let producto = inventario[idProducto - 1];
-        
-        // Verificar que el producto tenga stock
-        if (producto.stock === 0) {
-            alert(`❌ El producto "${producto.nombre}" no tiene stock disponible`);
-            continue;
-        }
-        
-        let cantidad = parseInt(prompt(`📦 ¿Cuántas unidades de "${producto.nombre}" desea comprar?\nStock disponible: ${producto.stock}`));
-        
-        // Validar cantidad
-        if (isNaN(cantidad) || cantidad <= 0) {
-            alert("❌ La cantidad debe ser un número positivo");
-            continue;
-        }
-        
-        if (cantidad > producto.stock) {
-            alert(`❌ No hay suficiente stock. Stock disponible: ${producto.stock}`);
-            continue;
-        }
-        
-        // PROCESAMIENTO: Agregar al carrito y actualizar stock
-        let itemCarrito = {
+    } else {
+        // Si no existe, agregar nuevo item
+        const itemCarrito = {
             producto: producto,
             cantidad: cantidad,
             subtotal: producto.precio * cantidad
         };
-        
         carrito.push(itemCarrito);
-        producto.stock -= cantidad;
-        producto.vendidos += cantidad;
-        
-        console.log(`✅ Agregado al carrito: ${cantidad}x ${producto.nombre} = $${itemCarrito.subtotal}`);
-        
-        continuarComprando = confirm("¿Desea agregar otro producto al carrito?");
     }
     
-    // Validar que haya productos en el carrito
+    // Guardar en localStorage
+    guardarDatos();
+    
+    // Actualizar pantalla
+    mostrarCarrito();
+    cantidadInput.value = 1; // Reset cantidad
+    
+    mostrarMensaje(`✅ ${cantidad}x ${producto.nombre} agregado al carrito`, 'exito');
+}
+
+// Función para mostrar carrito
+function mostrarCarrito() {
+    const listaCarrito = document.getElementById('lista-carrito');
+    const resumenVenta = document.getElementById('resumen-venta');
+    
     if (carrito.length === 0) {
-        alert("❌ No se agregaron productos al carrito");
+        listaCarrito.innerHTML = '<p><em>El carrito está vacío</em></p>';
+        resumenVenta.style.display = 'none';
         return;
     }
     
-    // PROCESAMIENTO: Calcular totales
+    let html = '';
+    
+    carrito.forEach((item, index) => {
+        html += `
+            <div class="item-carrito">
+                <h4>${item.producto.nombre}</h4>
+                <p>Cantidad: ${item.cantidad}</p>
+                <p>Precio unitario: $${item.producto.precio.toFixed(2)}</p>
+                <p>Subtotal: $${item.subtotal.toFixed(2)}</p>
+                <button onclick="eliminarDelCarrito(${index})">🗑️ Eliminar</button>
+            </div>
+        `;
+    });
+    
+    listaCarrito.innerHTML = html;
+    
+    // Mostrar resumen
+    mostrarResumenVenta();
+    resumenVenta.style.display = 'block';
+}
+
+// Función para mostrar resumen de venta (igual lógica que tu simulador)
+function mostrarResumenVenta() {
+    const detalleResumen = document.getElementById('detalle-resumen');
+    
+    // Calcular totales (igual que tu simulador original)
     let subtotal = 0;
-    
-    // Ciclo para sumar subtotales
-    for (let i = 0; i < carrito.length; i++) {
-        subtotal += carrito[i].subtotal;
-    }
-    
-    // Calcular cantidad total de productos
     let cantidadTotal = 0;
-    for (let i = 0; i < carrito.length; i++) {
-        cantidadTotal += carrito[i].cantidad;
-    }
+    
+    carrito.forEach(item => {
+        subtotal += item.subtotal;
+        cantidadTotal += item.cantidad;
+    });
     
     // Aplicar descuento mayorista si corresponde
     let descuento = 0;
@@ -189,11 +267,68 @@ function procesarVenta() {
     let impuestos = subtotalConDescuento * IVA;
     let total = subtotalConDescuento + impuestos;
     
-    // Crear objeto venta
+    let html = `
+        <p><strong>Subtotal:</strong> $${subtotal.toFixed(2)}</p>
+    `;
+    
+    if (descuento > 0) {
+        html += `<p><strong>Descuento mayorista (${(DESCUENTO_MAYORISTA * 100)}%):</strong> -$${descuento.toFixed(2)}</p>`;
+    }
+    
+    html += `
+        <p><strong>IVA (${(IVA * 100)}%):</strong> $${impuestos.toFixed(2)}</p>
+        <p class="total"><strong>TOTAL:</strong> $${total.toFixed(2)}</p>
+    `;
+    
+    detalleResumen.innerHTML = html;
+}
+
+// Función para eliminar producto del carrito
+function eliminarDelCarrito(index) {
+    carrito.splice(index, 1);
+    guardarDatos();
+    mostrarCarrito();
+    mostrarMensaje('🗑️ Producto eliminado del carrito', 'info');
+}
+
+// Función para limpiar carrito
+function limpiarCarrito() {
+    carrito = [];
+    guardarDatos();
+    mostrarCarrito();
+    mostrarMensaje('🗑️ Carrito limpiado', 'info');
+}
+
+// Función para finalizar venta (igual lógica que tu simulador)
+function finalizarVenta() {
+    if (carrito.length === 0) {
+        mostrarMensaje('❌ El carrito está vacío', 'error');
+        return;
+    }
+    
+    // Calcular totales
+    let subtotal = 0;
+    let cantidadTotal = 0;
+    
+    carrito.forEach(item => {
+        subtotal += item.subtotal;
+        cantidadTotal += item.cantidad;
+    });
+    
+    let descuento = 0;
+    if (cantidadTotal >= CANTIDAD_DESCUENTO) {
+        descuento = subtotal * DESCUENTO_MAYORISTA;
+    }
+    
+    let subtotalConDescuento = subtotal - descuento;
+    let impuestos = subtotalConDescuento * IVA;
+    let total = subtotalConDescuento + impuestos;
+    
+    // Crear objeto venta (igual que tu simulador)
     let venta = {
         id: ++contadorVentas,
         fecha: new Date().toLocaleDateString(),
-        carrito: carrito,
+        carrito: [...carrito], // Copia del carrito
         subtotal: subtotal,
         descuento: descuento,
         impuestos: impuestos,
@@ -201,180 +336,254 @@ function procesarVenta() {
         cantidadProductos: cantidadTotal
     };
     
+    // Actualizar stock e inventario
+    carrito.forEach(item => {
+        const producto = inventario.find(p => p.id === item.producto.id);
+        producto.stock -= item.cantidad;
+        producto.vendidos += item.cantidad;
+    });
+    
+    // Guardar venta
     ventasDelDia.push(venta);
     totalRecaudado += total;
     
-    // SALIDA: Mostrar ticket de venta
-    mostrarTicketVenta(venta);
-}
-
-// Función auxiliar para mostrar el ticket de venta
-function mostrarTicketVenta(venta) {
-    console.log("\n🧾 === TICKET DE VENTA ===");
-    console.log(`Venta #${venta.id} - ${venta.fecha}`);
-    console.log("========================");
+    // Limpiar carrito
+    carrito = [];
     
-    let ticketTexto = `🧾 TICKET DE VENTA #${venta.id}\n`;
-    ticketTexto += `📅 Fecha: ${venta.fecha}\n\n`;
-    ticketTexto += "PRODUCTOS:\n";
+    // Guardar todo en localStorage
+    guardarDatos();
     
-    // Mostrar productos del carrito
-    for (let i = 0; i < venta.carrito.length; i++) {
-        let item = venta.carrito[i];
-        let linea = `${item.cantidad}x ${item.producto.nombre} - $${item.subtotal}`;
-        console.log(linea);
-        ticketTexto += linea + "\n";
-    }
+    // Actualizar pantallas
+    mostrarInventario();
+    mostrarCatalogo();
+    mostrarCarrito();
     
-    console.log("------------------------");
-    console.log(`Subtotal: $${venta.subtotal.toFixed(2)}`);
-    
-    ticketTexto += "\n------------------------\n";
-    ticketTexto += `Subtotal: $${venta.subtotal.toFixed(2)}\n`;
-    
-    if (venta.descuento > 0) {
-        console.log(`Descuento mayorista (${(DESCUENTO_MAYORISTA * 100)}%): -$${venta.descuento.toFixed(2)}`);
-        ticketTexto += `Descuento mayorista (${(DESCUENTO_MAYORISTA * 100)}%): -$${venta.descuento.toFixed(2)}\n`;
-    }
-    
-    console.log(`IVA (${(IVA * 100)}%): $${venta.impuestos.toFixed(2)}`);
-    console.log(`TOTAL: $${venta.total.toFixed(2)}`);
-    
-    ticketTexto += `IVA (${(IVA * 100)}%): $${venta.impuestos.toFixed(2)}\n`;
-    ticketTexto += `TOTAL: $${venta.total.toFixed(2)}`;
-    
-    alert(ticketTexto);
+    // Mensaje de éxito
+    mostrarMensaje(`✅ Venta #${venta.id} finalizada. Total: $${total.toFixed(2)}`, 'exito');
 }
 
 // ========================================
-// FUNCIÓN 3: MOSTRAR REPORTES (SALIDA DE DATOS)
+// FUNCIÓN PARA MOSTRAR MENSAJES
 // ========================================
+function mostrarMensaje(mensaje, tipo) {
+    const areaMensajes = document.getElementById('area-mensajes');
+    
+    const div = document.createElement('div');
+    div.className = `mensaje mensaje-${tipo}`;
+    div.textContent = mensaje;
+    
+    areaMensajes.appendChild(div);
+    
+    setTimeout(() => {
+        div.remove();
+    }, 3000);
+}
+
+// ========================================
+// INICIALIZACIÓN - Eventos del DOM
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos guardados
+    cargarDatos();
+    
+    // Mostrar datos cargados
+    mostrarInventario();
+    mostrarCatalogo();
+    mostrarCarrito();
+    
+    // Vincular eventos
+    const formProducto = document.getElementById('form-producto');
+    formProducto.addEventListener('submit', agregarProducto);
+    
+    const btnFinalizarVenta = document.getElementById('btn-finalizar-venta');
+    btnFinalizarVenta.addEventListener('click', finalizarVenta);
+    
+    const btnLimpiarCarrito = document.getElementById('btn-limpiar-carrito');
+    btnLimpiarCarrito.addEventListener('click', limpiarCarrito);
+    
+    // Mensaje inicial
+    if (inventario.length > 0) {
+        mostrarMensaje(`🏪 Simulador cargado. Inventario: ${inventario.length} productos`, 'info');
+    } else {
+        mostrarMensaje('🏪 ¡Simulador cargado! Comienza agregando productos al inventario.', 'info');
+    }
+});
+
+// ========================================
+// FUNCIONES DE REPORTES (igual lógica que tu simulador original)
+// ========================================
+
+// Función para generar reportes completos
 function mostrarReportes() {
-    console.log("\n📊 === REPORTES DE LA TIENDA ===");
+    const areaReportes = document.getElementById('area-reportes');
     
     if (ventasDelDia.length === 0) {
-        alert("📊 No hay ventas registradas para mostrar reportes");
+        areaReportes.innerHTML = '<p><em>No hay ventas registradas para mostrar reportes</em></p>';
         return;
     }
     
-    // PROCESAMIENTO: Calcular estadísticas
+    // Calcular estadísticas (igual que tu simulador original)
     let totalProductosVendidos = 0;
     let productoMasVendido = null;
     let maxVendidos = 0;
     
-    // Ciclo para encontrar el producto más vendido
-    for (let i = 0; i < inventario.length; i++) {
-        let producto = inventario[i];
+    // Encontrar producto más vendido
+    inventario.forEach(producto => {
         totalProductosVendidos += producto.vendidos;
         
         if (producto.vendidos > maxVendidos) {
             maxVendidos = producto.vendidos;
             productoMasVendido = producto;
         }
-    }
+    });
     
     let promedioVenta = totalRecaudado / ventasDelDia.length;
     
-    // SALIDA: Mostrar reporte completo
-    let reporte = "📊 REPORTE DE VENTAS\n";
-    reporte += "===================\n\n";
-    reporte += `💰 Total recaudado: $${totalRecaudado.toFixed(2)}\n`;
-    reporte += `🛒 Ventas realizadas: ${ventasDelDia.length}\n`;
-    reporte += `📦 Productos vendidos: ${totalProductosVendidos}\n`;
-    reporte += `📈 Promedio por venta: $${promedioVenta.toFixed(2)}\n\n`;
+    // Generar HTML del reporte
+    let html = `
+        <div class="reporte-container">
+            <h3>📊 Reporte de Ventas</h3>
+            
+            <div class="estadisticas-principales">
+                <div class="estadistica">
+                    <h4>💰 Total Recaudado</h4>
+                    <p class="valor-grande">$${totalRecaudado.toFixed(2)}</p>
+                </div>
+                
+                <div class="estadistica">
+                    <h4>🛒 Ventas Realizadas</h4>
+                    <p class="valor-grande">${ventasDelDia.length}</p>
+                </div>
+                
+                <div class="estadistica">
+                    <h4>📦 Productos Vendidos</h4>
+                    <p class="valor-grande">${totalProductosVendidos}</p>
+                </div>
+                
+                <div class="estadistica">
+                    <h4>📈 Promedio por Venta</h4>
+                    <p class="valor-grande">$${promedioVenta.toFixed(2)}</p>
+                </div>
+            </div>
+    `;
     
     if (productoMasVendido) {
-        reporte += `🏆 Producto más vendido: ${productoMasVendido.nombre} (${productoMasVendido.vendidos} unidades)\n\n`;
+        html += `
+            <div class="producto-destacado">
+                <h4>🏆 Producto Más Vendido</h4>
+                <p><strong>${productoMasVendido.nombre}</strong> (${productoMasVendido.vendidos} unidades)</p>
+            </div>
+        `;
     }
     
-    reporte += "📋 INVENTARIO ACTUAL:\n";
-    reporte += "====================\n";
+    // Estado del inventario
+    html += `
+        <div class="inventario-estado">
+            <h4>📋 Estado del Inventario</h4>
+            <div class="productos-estado">
+    `;
     
-    // Mostrar estado del inventario
-    for (let i = 0; i < inventario.length; i++) {
-        let producto = inventario[i];
-        reporte += `${producto.nombre}: Stock ${producto.stock}, Vendidos ${producto.vendidos}\n`;
-    }
+    inventario.forEach(producto => {
+        html += `
+            <div class="producto-estado">
+                <span class="nombre">${producto.nombre}:</span>
+                <span class="stock">Stock ${producto.stock}</span>
+                <span class="vendidos">Vendidos ${producto.vendidos}</span>
+            </div>
+        `;
+    });
     
-    console.log(reporte);
-    alert(reporte);
+    html += `
+            </div>
+        </div>
+        </div>
+    `;
+    
+    areaReportes.innerHTML = html;
 }
 
 // ========================================
-// FUNCIÓN PRINCIPAL DEL SIMULADOR
+// FUNCIONES DE CONTROLES GENERALES
 // ========================================
-function iniciarSimulador() {
-    // Mensaje de bienvenida
-    console.log("🏪 ¡Bienvenido al Simulador de Tienda Virtual!");
-    alert("🏪 ¡Bienvenido al Simulador de Tienda Virtual!\n\n" +
-          "Este simulador te permitirá:\n" +
-          "• Cargar productos al inventario\n" +
-          "• Realizar ventas con cálculos automáticos\n" +
-          "• Ver reportes de ventas y estadísticas\n\n" +
-          "¡Comencemos!");
-    
-    let continuarSimulador = true;
-    
-    // Menú principal con ciclo
-    while (continuarSimulador) {
-        let opcion = prompt("🏪 MENÚ PRINCIPAL\n\n" +
-                           "1. 📦 Cargar productos al inventario\n" +
-                           "2. 🛒 Realizar una venta\n" +
-                           "3. 📊 Ver reportes de ventas\n" +
-                           "4. 📋 Ver inventario actual\n" +
-                           "5. 🚪 Salir del simulador\n\n" +
-                           "Seleccione una opción (1-5):");
-        
-        // Estructuras condicionales para el menú
-        if (opcion === "1") {
-            cargarInventario();
-        } else if (opcion === "2") {
-            procesarVenta();
-        } else if (opcion === "3") {
-            mostrarReportes();
-        } else if (opcion === "4") {
-            mostrarInventarioActual();
-        } else if (opcion === "5") {
-            let confirmarSalida = confirm("¿Está seguro que desea salir del simulador?");
-            if (confirmarSalida) {
-                continuarSimulador = false;
-                console.log("👋 ¡Gracias por usar el Simulador de Tienda Virtual!");
-                alert("👋 ¡Gracias por usar el Simulador de Tienda Virtual!\n\nHasta pronto!");
-            }
-        } else {
-            alert("❌ Opción no válida. Por favor seleccione una opción del 1 al 5.");
-        }
-    }
-}
 
-// Función auxiliar para mostrar inventario actual
-function mostrarInventarioActual() {
-    console.log("\n📋 === INVENTARIO ACTUAL ===");
-    
+// Función para limpiar inventario
+function limpiarInventario() {
     if (inventario.length === 0) {
-        alert("📋 El inventario está vacío. Primero debe cargar productos.");
+        mostrarMensaje('📦 El inventario ya está vacío', 'info');
         return;
     }
     
-    let inventarioTexto = "📋 INVENTARIO ACTUAL:\n\n";
+    inventario = [];
+    carrito = [];
+    guardarDatos();
     
-    for (let i = 0; i < inventario.length; i++) {
-        let producto = inventario[i];
-        let linea = `${producto.id}. ${producto.nombre}\n` +
-                   `   💰 Precio: $${producto.precio}\n` +
-                   `   📦 Stock: ${producto.stock}\n` +
-                   `   🏷️ Categoría: ${producto.categoria}\n` +
-                   `   📊 Vendidos: ${producto.vendidos}\n\n`;
-        
-        console.log(`${producto.id}. ${producto.nombre} - Precio: $${producto.precio} - Stock: ${producto.stock} - Vendidos: ${producto.vendidos}`);
-        inventarioTexto += linea;
+    mostrarInventario();
+    mostrarCatalogo();
+    mostrarCarrito();
+    
+    mostrarMensaje('🗑️ Inventario limpiado completamente', 'info');
+}
+
+// Función para limpiar historial de ventas
+function limpiarHistorialVentas() {
+    if (ventasDelDia.length === 0) {
+        mostrarMensaje('📊 No hay historial de ventas para limpiar', 'info');
+        return;
     }
     
-    alert(inventarioTexto);
+    ventasDelDia = [];
+    totalRecaudado = 0;
+    contadorVentas = 0;
+    
+    // Resetear vendidos en inventario
+    inventario.forEach(producto => {
+        producto.vendidos = 0;
+    });
+    
+    guardarDatos();
+    
+    mostrarInventario();
+    document.getElementById('area-reportes').innerHTML = '<p><em>Haz clic en "Generar Reporte" para ver las estadísticas</em></p>';
+    
+    mostrarMensaje('🗑️ Historial de ventas limpiado', 'info');
+}
+
+// Función para exportar datos (simulada)
+function exportarDatos() {
+    const datos = {
+        inventario: inventario,
+        ventasDelDia: ventasDelDia,
+        totalRecaudado: totalRecaudado,
+        fecha: new Date().toLocaleDateString()
+    };
+    
+    const datosJSON = JSON.stringify(datos, null, 2);
+    
+    // Crear blob y descargar
+    const blob = new Blob([datosJSON], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tienda-datos-${new Date().toLocaleDateString().replace(/\//g, '-')}.json`;
+    a.click();
+    
+    mostrarMensaje('💾 Datos exportados correctamente', 'exito');
 }
 
 // ========================================
-// INICIO AUTOMÁTICO DEL SIMULADOR
+// ACTUALIZAR INICIALIZACIÓN - AGREGAR al final de DOMContentLoaded
 // ========================================
-// El simulador se inicia automáticamente cuando se carga la página
-iniciarSimulador();
+
+// AGREGAR estos event listeners dentro de DOMContentLoaded, después de los existentes:
+
+    const btnMostrarReportes = document.getElementById('btn-mostrar-reportes');
+    btnMostrarReportes.addEventListener('click', mostrarReportes);
+    
+    const btnLimpiarInventario = document.getElementById('btn-limpiar-inventario');
+    btnLimpiarInventario.addEventListener('click', limpiarInventario);
+    
+    const btnLimpiarVentas = document.getElementById('btn-limpiar-ventas');
+    btnLimpiarVentas.addEventListener('click', limpiarHistorialVentas);
+    
+    const btnExportarDatos = document.getElementById('btn-exportar-datos');
+    btnExportarDatos.addEventListener('click', exportarDatos);
