@@ -1,0 +1,50 @@
+[
+    {
+        "nombre": "Notebook Dell Inspiron",
+        "precio": 85000,
+        "stock": 3,
+        "categoria": "Electrónicos"
+    },
+    {
+        "nombre": "Mouse Logitech",
+        "precio": 2500,
+        "stock": 15,
+        "categoria": "Accesorios"
+    },
+    {
+        "nombre": "Teclado Mecánico",
+        "precio": 6800,
+        "stock": 8,
+        "categoria": "Accesorios"
+    },
+    {
+        "nombre": "Monitor Samsung 24",
+        "precio": 45000,
+        "stock": 5,
+        "categoria": "Electrónicos"
+    },
+    {
+        "nombre": "Auriculares Bluetooth",
+        "precio": 4200,
+        "stock": 12,
+        "categoria": "Audio"
+    },
+    {
+        "nombre": "Cargador USB-C",
+        "precio": 3500,
+        "stock": 20,
+        "categoria": "Accesorios"
+    },
+    {
+        "nombre": "Webcam HD",
+        "precio": 8900,
+        "stock": 6,
+        "categoria": "Electrónicos"
+    },
+    {
+        "nombre": "Cable HDMI",
+        "precio": 1500,
+        "stock": 25,
+        "categoria": "Cables"
+    }
+]

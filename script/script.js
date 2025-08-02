@@ -51,6 +51,66 @@ function cargarDatos() {
 }
 
 // ========================================
+// FUNCIONES DE CARGA ASINCRÓNICA (FETCH)
+// ========================================
+
+// Función para cargar productos iniciales desde JSON
+async function cargarProductosIniciales() {
+    try {
+        mostrarMensaje('🔄 Cargando productos iniciales...', 'info');
+        
+        const response = await fetch('./data/productos.json');
+        
+        // Verificar que la respuesta sea exitosa
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const productosJSON = await response.json();
+        
+        // Solo cargar si el inventario está vacío (para no duplicar)
+        if (inventario.length === 0) {
+            productosJSON.forEach(productoData => {
+                const producto = {
+                    id: inventario.length + 1,
+                    nombre: productoData.nombre,
+                    precio: productoData.precio,
+                    stock: productoData.stock,
+                    categoria: productoData.categoria,
+                    vendidos: 0
+                };
+                inventario.push(producto);
+            });
+            
+            // Guardar en localStorage
+            guardarDatos();
+            
+            // Actualizar pantalla
+            mostrarInventario();
+            mostrarCatalogo();
+            
+            mostrarMensaje(`✅ ${productosJSON.length} productos cargados desde archivo JSON`, 'exito');
+        } else {
+            mostrarMensaje('📦 Productos ya cargados desde localStorage', 'info');
+        }
+        
+    } catch (error) {
+        console.error('Error cargando productos iniciales:', error);
+        mostrarMensaje('⚠️ No se pudieron cargar productos iniciales. Puedes agregar productos manualmente.', 'info');
+    }
+}
+
+// Función auxiliar para verificar si hay conectividad (opcional)
+async function verificarConectividad() {
+    try {
+        const response = await fetch('./data/productos.json', { method: 'HEAD' });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+}
+
+// ========================================
 // FUNCIONES DE INVENTARIO
 // ========================================
 
@@ -380,18 +440,21 @@ function mostrarMensaje(mensaje, tipo) {
 }
 
 // ========================================
-// INICIALIZACIÓN - Eventos del DOM
+// INICIALIZACIÓN - Eventos del DOM (VERSIÓN ACTUALIZADA)
 // ========================================
-document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos guardados
+document.addEventListener('DOMContentLoaded', async function() {
+    // 1. Cargar datos guardados en localStorage
     cargarDatos();
     
-    // Mostrar datos cargados
+    // 2. Si no hay productos en inventario, cargar desde JSON
+    await cargarProductosIniciales();
+    
+    // 3. Mostrar datos actuales (ya sea de localStorage o JSON)
     mostrarInventario();
     mostrarCatalogo();
     mostrarCarrito();
     
-    // Vincular eventos
+    // 4. Vincular todos los eventos (igual que antes)
     const formProducto = document.getElementById('form-producto');
     formProducto.addEventListener('submit', agregarProducto);
     
@@ -401,11 +464,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnLimpiarCarrito = document.getElementById('btn-limpiar-carrito');
     btnLimpiarCarrito.addEventListener('click', limpiarCarrito);
     
-    // Mensaje inicial
+    const btnMostrarReportes = document.getElementById('btn-mostrar-reportes');
+    btnMostrarReportes.addEventListener('click', mostrarReportes);
+    
+    const btnLimpiarInventario = document.getElementById('btn-limpiar-inventario');
+    btnLimpiarInventario.addEventListener('click', limpiarInventario);
+    
+    const btnLimpiarVentas = document.getElementById('btn-limpiar-ventas');
+    btnLimpiarVentas.addEventListener('click', limpiarHistorialVentas);
+    
+    const btnExportarDatos = document.getElementById('btn-exportar-datos');
+    btnExportarDatos.addEventListener('click', exportarDatos);
+    
+    // 5. Mensaje inicial
     if (inventario.length > 0) {
         mostrarMensaje(`🏪 Simulador cargado. Inventario: ${inventario.length} productos`, 'info');
     } else {
-        mostrarMensaje('🏪 ¡Simulador cargado! Comienza agregando productos al inventario.', 'info');
+        mostrarMensaje('🏪 Simulador cargado. Agrega productos para comenzar.', 'info');
     }
 });
 
