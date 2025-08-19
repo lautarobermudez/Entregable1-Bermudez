@@ -15,6 +15,9 @@ let ventasDelDia = [];
 let totalRecaudado = 0;
 let contadorVentas = 0;
 
+// CORRECCIÓN 1: Contador independiente para IDs únicos
+let proximoId = 1;
+
 // ========================================
 // FUNCIONES DE LOCALSTORAGE
 // ========================================
@@ -26,6 +29,7 @@ function guardarDatos() {
     localStorage.setItem('ventasDelDia', JSON.stringify(ventasDelDia));
     localStorage.setItem('totalRecaudado', totalRecaudado);
     localStorage.setItem('contadorVentas', contadorVentas);
+    localStorage.setItem('proximoId', proximoId); // Guardar también el contador de IDs
 }
 
 // Cargar datos desde localStorage
@@ -48,65 +52,16 @@ function cargarDatos() {
     
     totalRecaudado = parseFloat(localStorage.getItem('totalRecaudado')) || 0;
     contadorVentas = parseInt(localStorage.getItem('contadorVentas')) || 0;
-}
-
-// ========================================
-// FUNCIONES DE CARGA ASINCRÓNICA (FETCH)
-// ========================================
-
-// Función para cargar productos iniciales desde JSON
-async function cargarProductosIniciales() {
-    try {
-        mostrarMensaje('🔄 Cargando productos iniciales...', 'info');
-        
-        const response = await fetch('./data/productos.json');
-        
-        // Verificar que la respuesta sea exitosa
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+    
+    // CORRECCIÓN 1: Cargar contador de IDs y ajustarlo si es necesario
+    proximoId = parseInt(localStorage.getItem('proximoId')) || 1;
+    
+    // Si hay productos, asegurar que proximoId sea mayor al ID más alto
+    if (inventario.length > 0) {
+        const maxId = Math.max(...inventario.map(p => p.id));
+        if (proximoId <= maxId) {
+            proximoId = maxId + 1;
         }
-        
-        const productosJSON = await response.json();
-        
-        // Solo cargar si el inventario está vacío (para no duplicar)
-        if (inventario.length === 0) {
-            productosJSON.forEach(productoData => {
-                const producto = {
-                    id: inventario.length + 1,
-                    nombre: productoData.nombre,
-                    precio: productoData.precio,
-                    stock: productoData.stock,
-                    categoria: productoData.categoria,
-                    vendidos: 0
-                };
-                inventario.push(producto);
-            });
-            
-            // Guardar en localStorage
-            guardarDatos();
-            
-            // Actualizar pantalla
-            mostrarInventario();
-            mostrarCatalogo();
-            
-            mostrarMensaje(`✅ ${productosJSON.length} productos cargados desde archivo JSON`, 'exito');
-        } else {
-            mostrarMensaje('📦 Productos ya cargados desde localStorage', 'info');
-        }
-        
-    } catch (error) {
-        console.error('Error cargando productos iniciales:', error);
-        mostrarMensaje('⚠️ No se pudieron cargar productos iniciales. Puedes agregar productos manualmente.', 'info');
-    }
-}
-
-// Función auxiliar para verificar si hay conectividad (opcional)
-async function verificarConectividad() {
-    try {
-        const response = await fetch('./data/productos.json', { method: 'HEAD' });
-        return response.ok;
-    } catch (error) {
-        return false;
     }
 }
 
@@ -140,9 +95,47 @@ function agregarProducto(evento) {
         return;
     }
     
-    // Crear objeto producto
+    // CORRECCIÓN 2: Validar si el producto ya existe (por nombre)
+    const productoExistente = inventario.find(producto => 
+        producto.nombre.toLowerCase() === nombre.toLowerCase()
+    );
+    
+    if (productoExistente) {
+        // Si el producto ya existe, preguntar si desea actualizar el stock
+        const confirmar = confirm(
+            `❓ El producto "${nombre}" ya existe en el inventario.\n` +
+            `Stock actual: ${productoExistente.stock}\n` +
+            `¿Desea agregar ${stock} unidades al stock existente?`
+        );
+        
+        if (confirmar) {
+            // Actualizar stock del producto existente
+            productoExistente.stock += stock;
+            
+            // Guardar en localStorage
+            guardarDatos();
+            
+            // Limpiar formulario
+            document.getElementById('form-producto').reset();
+            
+            // Actualizar pantalla
+            mostrarInventario();
+            mostrarCatalogo();
+            
+            // Mensaje de éxito
+            mostrarMensaje(
+                `✅ Stock actualizado: "${productoExistente.nombre}" ahora tiene ${productoExistente.stock} unidades`, 
+                'exito'
+            );
+        } else {
+            mostrarMensaje('❌ Operación cancelada. El producto no fue modificado.', 'info');
+        }
+        return;
+    }
+    
+    // CORRECCIÓN 1: Usar contador independiente para generar ID único
     const producto = {
-        id: inventario.length + 1,
+        id: proximoId++,
         nombre: nombre,
         precio: precio,
         stock: stock,
@@ -164,7 +157,7 @@ function agregarProducto(evento) {
     mostrarCatalogo();
     
     // Mensaje de éxito
-    mostrarMensaje(`✅ Producto "${producto.nombre}" agregado correctamente`, 'exito');
+    mostrarMensaje(`✅ Producto "${producto.nombre}" agregado correctamente con ID #${producto.id}`, 'exito');
 }
 
 // Función para mostrar inventario en HTML
@@ -440,21 +433,18 @@ function mostrarMensaje(mensaje, tipo) {
 }
 
 // ========================================
-// INICIALIZACIÓN - Eventos del DOM (VERSIÓN ACTUALIZADA)
+// INICIALIZACIÓN - Eventos del DOM
 // ========================================
-document.addEventListener('DOMContentLoaded', async function() {
-    // 1. Cargar datos guardados en localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar datos guardados
     cargarDatos();
     
-    // 2. Si no hay productos en inventario, cargar desde JSON
-    await cargarProductosIniciales();
-    
-    // 3. Mostrar datos actuales (ya sea de localStorage o JSON)
+    // Mostrar datos cargados
     mostrarInventario();
     mostrarCatalogo();
     mostrarCarrito();
     
-    // 4. Vincular todos los eventos (igual que antes)
+    // Vincular eventos
     const formProducto = document.getElementById('form-producto');
     formProducto.addEventListener('submit', agregarProducto);
     
@@ -476,11 +466,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     const btnExportarDatos = document.getElementById('btn-exportar-datos');
     btnExportarDatos.addEventListener('click', exportarDatos);
     
-    // 5. Mensaje inicial
+    // Mensaje inicial
     if (inventario.length > 0) {
         mostrarMensaje(`🏪 Simulador cargado. Inventario: ${inventario.length} productos`, 'info');
     } else {
-        mostrarMensaje('🏪 Simulador cargado. Agrega productos para comenzar.', 'info');
+        mostrarMensaje('🏪 ¡Simulador cargado! Comienza agregando productos al inventario.', 'info');
     }
 });
 
@@ -590,6 +580,7 @@ function limpiarInventario() {
     
     inventario = [];
     carrito = [];
+    proximoId = 1; // CORRECCIÓN 1: Resetear también el contador de IDs
     guardarDatos();
     
     mostrarInventario();
@@ -644,21 +635,3 @@ function exportarDatos() {
     
     mostrarMensaje('💾 Datos exportados correctamente', 'exito');
 }
-
-// ========================================
-// ACTUALIZAR INICIALIZACIÓN - AGREGAR al final de DOMContentLoaded
-// ========================================
-
-// AGREGAR estos event listeners dentro de DOMContentLoaded, después de los existentes:
-
-    const btnMostrarReportes = document.getElementById('btn-mostrar-reportes');
-    btnMostrarReportes.addEventListener('click', mostrarReportes);
-    
-    const btnLimpiarInventario = document.getElementById('btn-limpiar-inventario');
-    btnLimpiarInventario.addEventListener('click', limpiarInventario);
-    
-    const btnLimpiarVentas = document.getElementById('btn-limpiar-ventas');
-    btnLimpiarVentas.addEventListener('click', limpiarHistorialVentas);
-    
-    const btnExportarDatos = document.getElementById('btn-exportar-datos');
-    btnExportarDatos.addEventListener('click', exportarDatos);
